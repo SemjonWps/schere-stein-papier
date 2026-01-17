@@ -1,5 +1,7 @@
 package org.example;
 
+import java.util.*;
+import java.util.concurrent.atomic.*;
 import java.util.function.*;
 
 public class Spieler {
@@ -10,6 +12,9 @@ public class Spieler {
     private int verloren = 0;
     private int unentschieden = 0;
 
+    private Map<Symbol, AtomicInteger> siegSymbole = new HashMap<>();
+
+
     public Spieler(String name, Supplier<Symbol> strategie) {
         this.name = name;
         this.strategie = strategie;
@@ -19,9 +24,15 @@ public class Spieler {
         return strategie.get();
     }
 
-    public void ergebnisMelden(Ergebnis ergebnis) {
+    public void ergebnisMelden(Ergebnis ergebnis, Symbol siegSymbol) {
         switch (ergebnis) {
-            case SIEG -> gewonnen++;
+            case SIEG -> {
+                gewonnen++;
+                var currentValue = siegSymbole.putIfAbsent(siegSymbol, new AtomicInteger(1));
+                if (currentValue != null) {
+                    currentValue.getAndIncrement();
+                }
+            }
             case NIEDERLAGE -> verloren++;
             case UNENTSCHIEDEN -> unentschieden++;
         }
